@@ -9,19 +9,21 @@ Interacting with the mainframe traditionally requires specialized knowledge of t
 - **Automate Workflows**: Easily integrate mainframe data into modern CI/CD pipelines or data processing services.
 - **Leverage Modern Libraries**: Use powerful Python libraries like `Flask` for creating web services.
 
-In this workshop, we build a service that downloads sensitive fixed-width COBOL data from a mainframe dataset, removes Social Security Numbers (SSN) while preserving the rest of the record structure, and uploads the "clean" version back—all through a simple REST API.
+In this workshop, we build a service that downloads sensitive fixed-width COBOL data from a mainframe dataset, removes Social Security Numbers (SSN) entirely while preserving the rest of the record structure, and uploads the "clean" version back—all through a simple REST API.
 
 ---
 
 ## Data Format (COBOL Copybook Style)
 
-The service expects data in a fixed-width format (93 characters per record):
+The **input** service expects data in a fixed-width format (93 characters per record):
 - **Account Number**: 8 characters
 - **Current Bill**: 4 characters
 - **Social Security Number**: 11 characters
 - **Name**: 30 characters
 - **Phone**: 10 characters
 - **Email**: 30 characters
+
+The **output** will be a fixed-width format (82 characters per record) with the SSN removed.
 
 ---
 

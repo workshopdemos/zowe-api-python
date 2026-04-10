@@ -8,24 +8,21 @@ load_dotenv()
 
 def manipulate_data(content):
     """
-    Removes SSN in fixed-width COBOL data (93 chars).
+    Removes SSN entirely in fixed-width COBOL data.
+    Input: 93 chars, Output: 82 chars.
     """
     manipulated_lines = []
     for line in content.splitlines():
-        if len(line) < 93:
-            manipulated_lines.append(line)
-            continue
+        # Ensure the line is padded to at least 93 chars to handle trailing spaces
+        line = f"{line:<93}"
             
         account = line[0:8]
         bill = line[8:12]
         
-        # Remove SSN (replace with 11 spaces)
-        ssn = " " * 11
-        
-        # Keep the rest of the line
+        # Skip SSN (chars 12-22) and take the rest
         rest = line[23:93]
         
-        new_line = f"{account}{bill}{ssn}{rest}"
+        new_line = f"{account}{bill}{rest}"
         manipulated_lines.append(new_line)
     
     return "\n".join(manipulated_lines)

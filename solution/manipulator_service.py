@@ -1,5 +1,5 @@
 from flask import Flask, request, jsonify
-from zowe.zos_files_for_zowe_sdk import Datasets
+from zowe.zos_files_for_zowe_sdk import Datasets, DatasetOption
 import logging
 import os
 
@@ -16,7 +16,7 @@ def get_profile_from_request(data):
     password = data.get('password')
     host = data.get('host', 'mainframe.example.com')
     port = data.get('port', 5010)
-    reject_unauthorized = data.get('reject_unauthorized', False)
+    reject_unauthorized = False
 
     if not username or not password:
         return None
@@ -26,37 +26,75 @@ def get_profile_from_request(data):
         "port": port,
         "user": username,
         "password": password,
-        "rejectUnauthorized": not reject_unauthorized
+        "rejectUnauthorized": False
     }
+
+def ensure_dataset_exists(datasets, dsname, lrecl=93):
+    """
+    Checks if a dataset exists, and creates it if not.
+    Attributes: Sequential, LRECL=lrecl, BLKSIZE=7161, RECFM=FB
+    """
+    try:
+        # Check if dataset exists
+        response = datasets.list(dsname)
+        if not any(item.dsname.upper() == dsname.upper() for item in response.items):
+            logging.info(f"Dataset {dsname} not found. Creating it...")
+            # Create sequential dataset with specified attributes using DatasetOption
+            options = DatasetOption(
+                dsorg="PS",
+                recfm="FB",
+                lrecl=lrecl,
+                blksize=7161,
+                primary=1,
+                secondary=1,
+                alcunit="TRK"
+            )
+            datasets.create(dsname, options=options)
+            logging.info(f"Dataset {dsname} created successfully.")
+        else:
+            logging.info(f"Dataset {dsname} already exists.")
+    except Exception as e:
+        logging.error(f"Error ensuring dataset {dsname} exists: {str(e)}")
+        raise e
 
 def manipulate_data(content):
     """
     Manipulation logic for fixed-width COBOL data.
-    Goal: Remove Social Security Numbers (replace with spaces).
-    Format:
-    - Account: 8, Bill: 4, SSN: 11, Name: 30, Phone: 10, Email: 30 (Total: 93 chars)
+    Goal: Remove Social Security Numbers entirely.
+    Input: 93 chars, Output: 82 chars.
     """
     manipulated_lines = []
     for line in content.splitlines():
-        if len(line) < 93:
-            manipulated_lines.append(line)
-            continue
+        # Ensure the line is padded to at least 93 chars to handle trailing spaces
+        line = f"{line:<93}"
             
         account = line[0:8]
         bill = line[8:12]
         
-        # Remove SSN (replace with 11 spaces)
-        ssn = " " * 11
+        # Skip SSN (chars 12-22) and take the rest
+        rest = line[23:93]
         
-        # Keep Name, Phone, and Email as is from the original line
-        name = line[23:53]
-        phone = line[53:63]
-        email = line[63:93]
-        
-        new_line = f"{account}{bill}{ssn}{name}{phone}{email}"
+        new_line = f"{account}{bill}{rest}"
         manipulated_lines.append(new_line)
     
     return "\n".join(manipulated_lines)
+
+@app.route('/list-datasets', methods=['POST'])
+def handle_list_datasets():
+    data = request.json
+    hlq = data.get('hlq')
+    profile = get_profile_from_request(data)
+
+    if not profile or not hlq:
+        return jsonify({"error": "Missing credentials or HLQ"}), 400
+
+    try:
+        datasets = Datasets(profile)
+        response = datasets.list(f"{hlq}.*")
+        names = [item.dsname for item in response.items]
+        return jsonify({"status": "success", "datasets": names})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 @app.route('/manipulate', methods=['POST'])
 def handle_manipulate():
@@ -74,6 +112,10 @@ def handle_manipulate():
 
     try:
         datasets = Datasets(profile)
+        
+        # Ensure output dataset exists with LRECL 82 (since SSN is removed)
+        ensure_dataset_exists(datasets, output_ds, lrecl=93)
+
         datasets.perform_download(input_ds, temp_in)
         
         with open(temp_in, "r") as f:
@@ -98,20 +140,19 @@ def handle_manipulate():
         if os.path.exists(temp_in): os.remove(temp_in)
         if os.path.exists(temp_out): os.remove(temp_out)
 
-@app.route('/manipulate-download', methods=['POST'])
-def handle_manipulate_download():
+@app.route('/download-dataset', methods=['POST'])
+def handle_download_dataset():
     """
-    Manipulates data and returns it in the response without uploading it back to the mainframe.
+    Downloads a dataset and returns its raw content.
     """
     data = request.json
     input_ds = data.get('input_dataset')
-
     profile = get_profile_from_request(data)
 
     if not profile or not input_ds:
         return jsonify({"error": "Missing required fields"}), 400
 
-    temp_in = "temp_in_dl.txt"
+    temp_in = "temp_download.txt"
 
     try:
         datasets = Datasets(profile)
@@ -119,18 +160,28 @@ def handle_manipulate_download():
         
         with open(temp_in, "r") as f:
             content = f.read()
-            
-        manipulated_content = manipulate_data(content)
-
+        print("c:", content)
+        json_output = []
+        for line in content.splitlines():
+            print("line:", line)
+            record = {
+                "account": line[0:8].strip(),
+                "bill": line[8:12].strip(),
+                "name": line[12:42].strip(),
+                "phone": line[42:52].strip(),
+                "email": line[52:82].strip()
+            }
+            json_output.append(record)
+        print("jsonout", json_output)
         return jsonify({
             "status": "success",
-            "manipulated_content": manipulated_content
+            "content": json_output
         })
     except Exception as e:
-        logging.error(f"Error during manipulation-download: {str(e)}")
+        logging.error(f"Error during download: {str(e)}")
         return jsonify({"error": str(e)}), 500
     finally:
         if os.path.exists(temp_in): os.remove(temp_in)
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)
+    app.run(host='0.0.0.0', port=5010)
