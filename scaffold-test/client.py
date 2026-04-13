@@ -28,9 +28,18 @@ def create_payload(extra_data=None):
         "reject_unauthorized": False # Replace with reject_unauthorized
     }
 
-    # TODO: Task 6 - Merge extra_data into the payload if provided
-    # Hint: if extra_data: payload.update(extra_data)
+    username = os.getenv("MAINFRAME_USER") or input("Enter Username: ")
+    password = os.getenv("MAINFRAME_PASSWORD") or getpass.getpass("Enter Password: ")
+    host = os.getenv("MAINFRAME_HOST", "mainframe.example.com")
+    port = int(os.getenv("MAINFRAME_PORT", 5010))
+    reject_unauthorized = os.getenv("MAINFRAME_REJECT_UNAUTHORIZED", "false").lower() == "true"
 
+    payload = {
+        "username": username, "password": password, "host": host,
+        "port": port, "reject_unauthorized": reject_unauthorized
+    }
+    if extra_data:
+        payload.update(extra_data)
     return payload
 
 def main():
@@ -40,25 +49,31 @@ def main():
     input_ds = "ZOWEUSER.PUBLIC.PII.DATA"
     output_ds = "ZOWEUSER.PUBLIC.MANIPULATED.DATA"
 
-    # TODO: Task 7 - List datasets for your HLQ
-    # 1. Use the helper to create a payload with {"hlq": "YOUR_USER"}
-    # 2. Send POST to http://localhost:5010/list-datasets
-    # 3. Print the results
+    hlq = os.getenv("MAINFRAME_USER") or input("Enter HLQ to list: ")
+    list_payload = create_payload({"hlq": hlq})
+    list_response = requests.post("http://localhost:5010/list-datasets", json=list_payload)
+    print("Found datasets:", list_response.json().get("datasets", []))
+        
+    manipulate_payload = create_payload({
+        "input_dataset": input_ds,
+        "output_dataset": output_ds
+    })
+    response = requests.post("http://localhost:5010/manipulate", json=manipulate_payload)
+    print(response.json().get("message", "Manipulation complete!"))
     
-    # TODO: Task 7 - Manipulate data
-    # 1. Use the helper to create a payload with input/output dataset names
-    # 2. Send POST to http://localhost:5010/manipulate
-    # 3. Print the results
-    
-    # TODO: Task 7 - Download manipulated data as JSON
-    # 1. Use the helper to create a payload with {"input_dataset": output_ds}
-    # 2. Send POST to http://localhost:5010/download-dataset
-    # 3. Parse the response and display the content
-    # Hint: records = []
-    # Hint: for line in content.splitlines():
-    # Hint:     if len(line) >= 82: records.append({"account": line[0:8].strip(), ...})
-    
-    print("TODO: Implement Task 7 in main()")
+    download_payload = create_payload({"input_dataset": output_ds})
+    download_response = requests.post("http://localhost:5010/download-dataset", json=download_payload)
+    content = download_response.json().get("content", "")
 
+    records = []
+    for line in content.splitlines():
+        if len(line) >= 82:
+            records.append({
+                "account": line[0:8].strip(), "bill": line[8:12].strip(),
+                "name": line[12:42].strip(), "phone": line[42:52].strip(),
+                "email": line[52:82].strip()
+            })
+    print(json.dumps(records, indent=2))
+    
 if __name__ == "__main__":
     main()

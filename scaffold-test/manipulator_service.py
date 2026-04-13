@@ -60,10 +60,10 @@ def manipulate_data(content):
         
         # TODO: Task 1 - Remove SSN (chars 12-22) by skipping them
         # Hint: rest = line[23:93]
-        rest = "" # Replace this
+        rest = line[23:93] # Replace this
         
         # TODO: Task 1 - Reconstruct the fixed-width line without SSN
-        new_line = "" # Replace this
+        new_line = f"{account}{bill}{rest}" # Replace this
         manipulated_lines.append(new_line)
     
     return "\n".join(manipulated_lines)
@@ -74,10 +74,13 @@ def ensure_dataset_exists(datasets, dsname, lrecl=93):
     Attributes: Sequential, LRECL=lrecl, BLKSIZE=7161, RECFM=FB
     """
     try:
-        # TODO: Task 2 - Check if dataset exists using datasets.list(dsname)
-        # TODO: Task 2 - If it doesn't exist, create it using datasets.create()
-        # Hint: options = DatasetOption(dsorg="PS", recfm="FB", lrecl=lrecl, blksize=7161, primary=1, secondary=1, alcunit="TRK")
-        pass
+        response = datasets.list(dsname)
+        if not any(item.dsname.upper() == dsname.upper() for item in response.items):
+            options = DatasetOption(
+                dsorg="PS", recfm="FB", lrecl=lrecl, 
+                blksize=7161, primary=1, secondary=1, alcunit="TRK"
+            )
+            datasets.create(dsname, options=options)
     except Exception as e:
         logging.error(f"Error ensuring dataset {dsname} exists: {str(e)}")
         raise e
@@ -95,10 +98,10 @@ def handle_list_datasets():
         return jsonify({"error": "Missing credentials or HLQ"}), 400
 
     try:
-        # TODO: Task 3 - Create Datasets object with profile
-        # TODO: Task 3 - List datasets using datasets.list(f"{hlq}.*")
-        # TODO: Task 3 - Extract names and return them
-        return jsonify({"status": "success", "datasets": []}) # Replace [] with actual names
+        datasets = Datasets(profile)
+        response = datasets.list(f"{hlq}.*")
+        names = [item.dsname for item in response.items]
+        return jsonify({"status": "success", "datasets": names})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
@@ -121,15 +124,18 @@ def handle_manipulate():
 
     try:
         datasets = Datasets(profile)
-        
-        # TODO: Task 4 - Ensure output dataset exists with LRECL 82 (since SSN is removed)
-        # Hint: ensure_dataset_exists(datasets, output_ds, lrecl=82)
+        # Ensure output dataset exists with LRECL 92 (since SSN is removed)
+        ensure_dataset_exists(datasets, output_ds, lrecl=92)
 
-        # TODO: Task 4 - Download input_ds using datasets.perform_download
-        
-        # TODO: Task 4 - Read content, manipulate it, and write to temp_out.txt
-        
-        # TODO: Task 4 - Upload temp_out.txt to output_ds using datasets.perform_upload
+        datasets.perform_download(input_ds, temp_in)
+        with open(temp_in, "r") as f:
+            content = f.read()
+
+        manipulated_content = manipulate_data(content)
+
+        with open(temp_out, "w") as f:
+            f.write(manipulated_content)
+        datasets.perform_upload(temp_out, output_ds)
         
         return jsonify({"status": "success", "message": "Data manipulated and uploaded"})
 
@@ -156,13 +162,11 @@ def handle_download_dataset():
 
     try:
         datasets = Datasets(profile)
-        # TODO: Task 5 - Download the dataset
-        # TODO: Task 5 - Read the file content
-        # TODO: Task 5 - Return the content in the JSON response
-        return jsonify({
-            "status": "success",
-            "content": "" # Replace with actual content
-        })
+        datasets.perform_download(input_ds, temp_in)
+        with open(temp_in, "r") as f:
+            content = f.read()
+        return jsonify({"status": "success", "content": content})
+
     except Exception as e:
         logging.error(f"Error during download: {str(e)}")
         return jsonify({"error": str(e)}), 500

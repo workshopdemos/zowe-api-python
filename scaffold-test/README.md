@@ -43,7 +43,7 @@ In this phase, we will build the "brain" of our service. We'll implement the man
 **Goal**: Create the "brain" that knows how to strip SSNs from fixed-width COBOL data.
 
 1.  Open `manipulator_service.py`.
-2.  Find the `manipulate_data` function (around line 46).
+2.  Find the `manipulate_data` function (around line 32).
 3.  Replace the `TODO: Task 1` sections inside the `for` loop with this code:
     ```python
         # Remove SSN (chars 12-22) by skipping them
@@ -56,6 +56,8 @@ In this phase, we will build the "brain" of our service. We'll implement the man
 
 ### Step 4: Task 2 - Implement Dataset Allocation
 **Goal**: Ensure the mainframe has a place to store our manipulated data.
+
+**NOTE:** If you copy and paste this, it will not be formatted correctly (it won't be indented).  You will see a number of squiggly lines in the code.  Highlight the section, then press tab until the squiggly messages go away, about 2 times.  Or, even better, type it in.
 
 1.  Find the `ensure_dataset_exists` function (around line 72).
 2.  Implement the logic to check and create:
