@@ -24,7 +24,7 @@ Managing credentials
 First, we need to install the Python libraries that do the heavy lifting.  This command installs all the dependencies (additional libraries) so we can focus on the solution.
 
 1.  Open your terminal.
-- Access it from the hamburger menu (three horizontal lines in the upper right)
+- Open a new terminal via the Terminal menu or the 'hamburger' (three vertical lines) menu in the top-left.
 - Select 'Terminal' then 'New Terminal'.
 2.  Navigate to this `scaffold/` folder.
     ```bash
@@ -49,7 +49,7 @@ We need to tell the code how to log in to your mainframe. You can use the file n
 ---
 ## Important Notes - Python Conventions
 
-Python treats indention as logic blocks.  Everything in the same block must be at the same indention level, with some exceptions, such as long strings and function parameters.  If copying and pasting code, the indentation may not be correct.  If you highlight the section of code, the tab key can move over the code block for you.  And SPACEs and TABs are not always treated the same.  For our purposes, use the TAB kep to be consistent.
+Python treats indentation as logic blocks.  Everything in the same block must be at the same indentation level, with some exceptions, such as long strings and function parameters.  If copying and pasting code, the indentation may not be correct.  If you highlight the section of code, the tab key can move over the code block for you.  And SPACEs and TABs are not always treated the same.  For our purposes, use the TAB key to be consistent.
 
 Conventions:
 
@@ -60,7 +60,7 @@ from zowe.zos_files_for_zowe_sdk import Datasets, DatasetOption
 import logging
 import os
 ```
-- As described in the previous README.md, these libraries import functions into the applcation for execution
+- As described in the previous README.md, these libraries import functions into the application for execution
 - Line 1 in manipulator_service.py imports Flask, our web framework.
 - Line 1 in manipulator_service.py imports the Zowe framework for Datasets.
 
@@ -91,7 +91,7 @@ num = 4 #comment
 ```python
 return data
 ```
-- Indicates return data
+- This indicates the data to be returned.
 - See line 24 in manipulator_service.py.
 
 ### String Work []
@@ -116,7 +116,7 @@ try:
 except Exception as e:
     something
 ```
-- This is exception handling.  The code block in `try` executes.  If there's a failure, the `exceoption` block is called.  Otherwise it is skipped.
+- This is exception handling.  The code block in `try` executes.  If there's a failure, the `exception` block is called.  Otherwise it is skipped.
 - Exception handling eases logic for failures and is good programming.
 - See line 77 in in manipulator_service.py.
 
@@ -130,7 +130,7 @@ except Exception as e:
 - See line 89 in in manipulator_service.py.
 
 
-### Addtional context
+### Additional context
 More context will be added in the document for things that aren't completely clear.
 
 ---
@@ -203,8 +203,8 @@ In this phase, we will build the "brain" of our service. We'll implement the man
 - This is the core workflow the service
 - This function downloads the dataset to the server, runs the manipulate data function, then uploads the dataset back to the mainframe.
 - Rather than making the user validate the dataset exists, we will create it for them if it doesn't.
-- Because we have the helper functions, this is pretty simple.  Get the dataset name from the header, check for values, then run the proceess.
-- The `try:` block checks to ensure the dataset exists and creates it if it doeesn't.  It writes the input dataset to disk, reads it, then uploads the modified content to the new dataset.
+- Because we have the helper functions, this is pretty simple.  Get the dataset name from the header, check for values, then run the process.
+- The `try:` block checks to ensure the dataset exists and creates it if it doesn't.  It writes the input dataset to disk, reads it, then uploads the modified content to the new dataset.
 - Then returns a proper return code if successful, otherwise it sends an error.
 - `open(...)` is a function for opening files for reading or writing, depending on the flags.  
 - And `finally:` is part of the try/exception block.  Once the code has run (both success and failure), it cleans up the disk.
@@ -257,10 +257,10 @@ Now that our server is ready, we'll build the client to interact with it.
 
 ### Step 8: Task 6 - Implement Credential Helper
 **Goal**: Securely handle mainframe authentication.
-- This client application can prompt for infomration, use an environment file, or even connect to the Zowe configuration files. 
+- This client application can prompt for information, use an environment file, or even connect to the Zowe configuration files. 
 - To keep things simple, we are using environment variables or prompting.
 - Just like the server side, we are importing libraries.  Since this is the client side, we don't need to import the Zowe libraries.
-- `load_dontenv()` uses the `.env` file to read configuration information.
+- `load_dotenv()` uses the `.env` file to read configuration information.
 - `payload = {...}` creates a dictionary variable.  Dictionaries have a named field and a value.  The first reference creates blank values, the second reference assigns the variables to those dictionary fields. 
 - Between the `payload = {...}` calls, the variables are assigned either through the `.env` file or through prompting the user.
 
@@ -355,4 +355,6 @@ Now we put it all together.
     If you didn't set up the `.env` file, it will ask for your username and password.
 
 3.  **Verify the Result**:
-    The client should say "Success!". Now, log in to your mainframe and check the `ZOWEUSER.PUBLIC.MANIPULATED.DATA` dataset. The SSNs should be gone, and each record should now be 93 characters long instead of 93!
+    The client should say "Success!".
+    - Review the output.  The SSN is no longer in the output.
+    
