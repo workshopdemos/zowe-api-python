@@ -16,7 +16,7 @@ def get_profile_from_request(data):
     password = data.get('password')
     host = data.get('host', 'mainframe.example.com')
     port = data.get('port', 5010)
-    reject_unauthorized = data.get('reject_unauthorized', False)
+    reject_unauthorized = False
 
     if not username or not password:
         return None
@@ -26,7 +26,7 @@ def get_profile_from_request(data):
         "port": port,
         "user": username,
         "password": password,
-        "rejectUnauthorized": not reject_unauthorized
+        "rejectUnauthorized": False
     }
 
 def manipulate_data(content):
@@ -48,6 +48,7 @@ def manipulate_data(content):
     - Name: 30 chars (12-41)
     - Phone: 10 chars (42-51)
     - Email: 30 chars (52-81)
+    - Padding: 12 chars (82-93)
     """
     manipulated_lines = []
     for line in content.splitlines():
@@ -171,7 +172,8 @@ def handle_download_dataset():
         logging.error(f"Error during download: {str(e)}")
         return jsonify({"error": str(e)}), 500
     finally:
-        if os.path.exists(temp_in): os.remove(temp_in)
+        if os.path.exists(temp_in):
+            os.remove(temp_in)
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5010)

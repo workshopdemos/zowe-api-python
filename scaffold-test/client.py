@@ -25,14 +25,14 @@ def create_payload(extra_data=None):
         "password": "", # Replace with password
         "host": "", # Replace with host
         "port": 5010, # Replace with port
-        "reject_unauthorized": False # Replace with reject_unauthorized
+        "reject_unauthorized": "false" # Replace with reject_unauthorized
     }
 
     username = os.getenv("MAINFRAME_USER") or input("Enter Username: ")
     password = os.getenv("MAINFRAME_PASSWORD") or getpass.getpass("Enter Password: ")
     host = os.getenv("MAINFRAME_HOST", "mainframe.example.com")
     port = int(os.getenv("MAINFRAME_PORT", 5010))
-    reject_unauthorized = os.getenv("MAINFRAME_REJECT_UNAUTHORIZED", "false").lower() == "true"
+    reject_unauthorized = False
 
     payload = {
         "username": username, "password": password, "host": host,
@@ -40,14 +40,15 @@ def create_payload(extra_data=None):
     }
     if extra_data:
         payload.update(extra_data)
+    print("payload", payload)
     return payload
 
 def main():
     print("--- Mainframe Data Manipulator Client ---")
     
     # Define the datasets for manipulation
-    input_ds = "ZOWEUSER.PUBLIC.PII.DATA"
-    output_ds = "ZOWEUSER.PUBLIC.MANIPULATED.DATA"
+    input_ds = "cust001.cust.data"
+    output_ds = "cust001.cust.obdata"
 
     hlq = os.getenv("MAINFRAME_USER") or input("Enter HLQ to list: ")
     list_payload = create_payload({"hlq": hlq})
@@ -67,7 +68,7 @@ def main():
 
     records = []
     for line in content.splitlines():
-        if len(line) >= 82:
+        if len(line) >= 1:
             records.append({
                 "account": line[0:8].strip(), "bill": line[8:12].strip(),
                 "name": line[12:42].strip(), "phone": line[42:52].strip(),
