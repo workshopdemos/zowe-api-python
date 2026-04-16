@@ -21,10 +21,10 @@ server:
     ssl:
     #     keyAlias: localhost
     #     keyPassword: password
-        keyStore: localhost.keystore.p12
+        keyStore: ./localhost/localhost.keystore.p12
     #     keyStorePassword: password
     #     keyStoreType: PKCS12
-        trustStore: localhost.truststore.p12
+        trustStore: ./localhost/localhost.truststore.p12
     #     trustStorePassword: password
     #     trustStoreType: PKCS12
 apiml:
