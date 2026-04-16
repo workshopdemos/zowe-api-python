@@ -1,0 +1,128 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Mainframe Data Manipulator API",
+    "description": "API for manipulating mainframe data through Zowe SDK",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/list-datasets": {
+      "post": {
+        "summary": "List datasets for a given HLQ",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "username": { "type": "string" },
+                  "password": { "type": "string" },
+                  "host": { "type": "string" },
+                  "port": { "type": "integer" },
+                  "hlq": { "type": "string" }
+                },
+                "required": ["username", "password", "hlq"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved datasets",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string" },
+                    "datasets": { "type": "array", "items": { "type": "string" } }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/manipulate": {
+      "post": {
+        "summary": "Manipulate mainframe data",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "username": { "type": "string" },
+                  "password": { "type": "string" },
+                  "host": { "type": "string" },
+                  "port": { "type": "integer" },
+                  "input_dataset": { "type": "string" },
+                  "output_dataset": { "type": "string" }
+                },
+                "required": ["username", "password", "input_dataset", "output_dataset"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successfully manipulated data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string" },
+                    "message": { "type": "string" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/download-dataset": {
+      "post": {
+        "summary": "Download mainframe dataset content",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "username": { "type": "string" },
+                  "password": { "type": "string" },
+                  "host": { "type": "string" },
+                  "port": { "type": "integer" },
+                  "input_dataset": { "type": "string" }
+                },
+                "required": ["username", "password", "input_dataset"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successfully downloaded data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string" },
+                    "content": { "type": "string" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

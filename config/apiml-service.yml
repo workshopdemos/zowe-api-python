@@ -1,0 +1,117 @@
+spring.profiles.active: diag
+logging:
+    level:
+        org.springframework.web.socket.client.standard.AnnotatedEndpointConnectionManager: DEBUG
+        org.springframework.web.reactive.socket.client.StandardWebSocketClient: TRACE
+        # org.apache.tomcat.websocket.WsWebSocketContainer: TRACE
+        # org.apache.tomcat: DEBUG
+        # org.apache.coyote: DEBUG
+
+server:
+    max-http-request-header-size: 16348
+    webSocket:
+        requestBufferSize: 16348
+
+        # org.springframework.cloud.gateway: TRACE
+        # org.springframework.http.server.reactive: TRACE
+        # org.springframework.web.reactive: TRACE
+        # org.springframework.boot.autoconfigure.web: TRACE
+        # reactor.netty: TRACE
+        # redisratelimiter: TRACE
+    ssl:
+    #     keyAlias: localhost
+    #     keyPassword: password
+        keyStore: localhost.keystore.p12
+    #     keyStorePassword: password
+    #     keyStoreType: PKCS12
+        trustStore: localhost.truststore.p12
+    #     trustStorePassword: password
+    #     trustStoreType: PKCS12
+apiml:
+    catalog:
+        eureka:
+            instance:
+                metadata-map:
+                    apiml:
+                        corsEnabled: true
+                        corsAllowedOrigins: http://localhost:5173
+    internal-discovery:
+        port: 10011
+    health:
+        protected: false
+    gateway:
+        servicesToLimitRequestRate: discoverableclient
+        cookieNameForRateLimiter: apimlAuthenticationToken
+    security:
+        x509:
+            enabled: true
+            certificatesUrl: https://localhost:10010/gateway/certificates
+        allowTokenRefresh: true
+        webfinger:
+            fileLocation: config/local/webfinger.yml
+        personalAccessToken:
+            enabled: true
+        oidc:
+            enabled: false
+            clientId:
+            clientSecret:
+            registry: zowe.okta.com
+            identityMapperUrl: ${apiml.service.scheme}://${apiml.service.hostname}:${apiml.service.port}/zss/api/v1/certificate/dn
+            identityMapperUser: APIMTST
+            jwks:
+                uri:
+        auth:
+            jwt:
+                customAuthHeader: customJwtHeader
+            passticket:
+                customUserHeader: customUserHeader
+                customAuthHeader: customPassticketHeader
+            provider: zosmf
+            zosmf:
+                serviceId: pythonservice  # Replace me with the correct z/OSMF service id
+caching:
+    storage:
+        mode: infinispan
+        infinispan:
+            initialHosts: localhost[7601]
+jgroups:
+    bind:
+        port: 7600
+        address: localhost
+
+spring:
+    cloud:
+        gateway:
+            server:
+                webflux:
+                    httpclient:
+                        websocket:
+                            max-frame-payload-length: 3145728
+
+otel:
+    resource:
+        attributes:
+            deployment.environment: dev
+            service:
+                name: apiml
+
+    traces:
+        exporter: none
+    metrics:
+        exporter: otlp
+    logs:
+        ## Do not use logging-otlp without additional configuration (TBD) because the open telemetry logs from console
+        ## will be captured again ending in an infinite logging loop and resource starvation
+        exporter: otlp
+        include-trace-context: true
+    exporter:
+        otlp:
+            endpoint: https://localhost:4318
+    sdk:
+        disabled: true
+
+management:
+    endpoints:
+        web:
+            exposure:
+                include: "*"
