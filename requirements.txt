@@ -4,3 +4,4 @@ pydantic
 pyyaml
 zowe-zos-files-for-zowe-sdk
 zowe-apiml-onboarding-enabler-python
+dotenv
