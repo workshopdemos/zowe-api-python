@@ -1,4 +1,0 @@
-flask
-requests
-zowe-python-sdk-bundle
-python-dotenv
